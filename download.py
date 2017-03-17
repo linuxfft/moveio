@@ -1,46 +1,45 @@
 # -*- encoding: utf8 -*-
-import os
-import argparse
+import docker
+import threading
+import yaml
 
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--images', nargs='*', type=str, required=True)
-    parser.add_argument('--host', type=str, default='registry.cloudahead.info')
-    parser.add_argument('-p', '--project', type=str, required=True)
+class MoveIO(threading.Thread):
+    """Download image and push to remote repository"""
+    def __init__(self,  host, username, repository, password, image, tag='latest'):
+        threading.Thread.__init__(self)
+        self.host = host
+        self.username = username
+        self.password = password
+        self.image = image
+        self.tag = tag
+        self.repository = host+'/' + repository
 
-    return parser.parse_args()
-
-
-def push_docker_images():
-    args = get_args()
-
-    images = args.images
-    host = args.host
-    project = args.project
-    tag_prefix = host + ':' + project
-
-    for item in images:
+    def run(self):
         try:
+            client = docker.from_env()
+            print('='*50)
             # 下载镜像
-            print('image: ', item)
-            os.system('docker pull ' + item)
-
-            # 登陆服务器
-            print('host: ', host)
-            os.system('docker login ' + host)
-
+            image = client.images.pull(self.image, tag=self.tag)
             # 打标签
-            tag = tag_prefix + '/' + item
-            print('tag: ', item,  tag)
-            os.system('docker tag ' + item + ' ' + tag)
-
+            new_tag = self.image + '_' + self.tag
+            image.tag(self.repository, new_tag)
             # push
-            os.system('docker push ' + tag)
-
+            print(self.repository)
+            ret = client.images.push(self.repository, tag=new_tag, auth_config={'username': self.username,
+                                                                                 'password': self.password})
+            print(ret)
         except Exception as e:
             print(e)
 
-
 if __name__ == '__main__':
-    push_docker_images()
+    with open('usage.yml', 'rt') as f:
+        setting = yaml.load(f)
+
+    threads = [MoveIO(host=setting['host'], repository=setting['repository'], username=setting['username'], password=setting['password'],
+                      image=item['name'], tag=item['tag']) for item in setting['images']]
+    for t in threads:
+        t.start()
+
+    for t in threads:
+        t.join()
