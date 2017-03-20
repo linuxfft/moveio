@@ -6,5 +6,3 @@ password: a123536428
 images:
  - name: nginx
    tag: latest
- - name: busybox
-   tag: latest

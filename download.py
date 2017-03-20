@@ -1,7 +1,12 @@
 # -*- encoding: utf8 -*-
-import docker
+import logging
+import logging.config
 import threading
+import docker
 import yaml
+from docker.errors import ImageNotFound
+
+logging.config.fileConfig('logger.ini')
 
 
 class MoveIO(threading.Thread):
@@ -18,19 +23,30 @@ class MoveIO(threading.Thread):
     def run(self):
         try:
             client = docker.from_env()
-            print('='*50)
-            # 下载镜像
-            image = client.images.pull(self.image, tag=self.tag)
-            # 打标签
+            # pull image
+            logging.info('pull image: ' + self.image + ':' + self.tag)
+            try:
+                # if get method not found image, then throw ImageNotFound exception
+                locate_image = client.images.get(self.image + ':' + self.tag)
+                image = client.images.pull(self.image, tag=self.tag)
+                if image.id == locate_image.id:
+                    logging.info(self.image + ':' + self.tag + ' is the latest' + '***')
+                    return
+            except ImageNotFound:
+                image = client.images.pull(self.image, tag=self.tag)
+
+            # tag image
             new_tag = self.image + '_' + self.tag
+            logging.info('tag image: ' + new_tag)
             image.tag(self.repository, new_tag)
+
             # push
-            print(self.repository)
-            ret = client.images.push(self.repository, tag=new_tag, auth_config={'username': self.username,
-                                                                                 'password': self.password})
-            print(ret)
+            logging.info('push image: ' + new_tag + ' ' + self.repository)
+            client.images.push(self.repository, tag=new_tag, auth_config={'username': self.username,
+                                                                                'password': self.password})
+            logging.info('push successed: ' + new_tag)
         except Exception as e:
-            print(e)
+            logging.error(e)
 
 if __name__ == '__main__':
     with open('usage.yml', 'rt') as f:

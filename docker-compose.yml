@@ -3,6 +3,5 @@ moveio:
   image: "moveio:latest"
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
-  #  - /data/ngxahead/web_root/website_moveimage_cn:/dist
 
 
