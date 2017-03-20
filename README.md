@@ -3,5 +3,11 @@
 
 ## 用法
 ```
-sudo python download.py --images redis mongo --host 127.0.0.1 -p 5000
+sudo python download.py
+```
+
+## 使用docker
+```
+    sudo docker build -t moveio .
+    sudo docker-compose -f ./docker-compose.yml up
 ```
