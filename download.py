@@ -5,8 +5,15 @@ import threading
 import docker
 import yaml
 from docker.errors import ImageNotFound
+import time
+import datetime
+import os
+import sched
 
 logging.config.fileConfig('logger.ini')
+schedule = sched.scheduler(time.time, time.sleep)
+
+threadList = []
 
 
 class MoveIO(threading.Thread):
@@ -48,14 +55,60 @@ class MoveIO(threading.Thread):
         except Exception as e:
             logging.error(e)
 
+
+def push_image():
+    sleep_time = 60
+
+    try:
+        with open('usage.yml', 'rt') as f:
+            setting = yaml.load(f)
+
+        threads = [MoveIO(host=setting['host'], repository=setting['repository'], username=setting['username'], password=setting['password'],
+                          image=item['name'], tag=item['tag']) for item in setting['images']]
+
+        for t in threads:
+            t.start()
+
+        for t in threads:
+            t.join()
+
+        logging.info('log clean method going to sleep ' + str(sleep_time / 60) + ' minute')
+        schedule.enter(sleep_time, 0, push_image)
+
+    except Exception as e:
+        logging.error(e)
+
+
+def clean_log():
+    clean_time = '03:00:00'
+    interval_day = 1
+    log_keep_time = 1
+    log_dir = 'log'
+
+    # calculate sleep time
+    now_datetime = datetime.datetime.now()
+    future_datetime = now_datetime + datetime.timedelta(days=interval_day)
+    future_date = future_datetime.strftime('%Y-%m-%d')
+    new_datetime_str = future_date + ' ' + clean_time
+    new_datetime = datetime.datetime.strptime(new_datetime_str, '%Y-%m-%d %H:%M:%S')
+    diff_second = (new_datetime - now_datetime).seconds
+    try:
+        file_list = os.listdir(log_dir)
+        for f in file_list:
+            mtime = os.path.getmtime(os.path.join(log_dir, f))
+            mdata = datetime.datetime.fromtimestamp(mtime)
+
+            diff = now_datetime - mdata
+            if diff.days > log_keep_time:
+                os.remove(os.path.join(log_dir, f))
+
+        # sleep and then repeat do clean action
+        logging.info('log clean method going to sleep ' + str(diff_second/60) + ' minute')
+        schedule.enter(diff_second, 0, clean_log)
+    except Exception as e:
+        logging.error(e)
+
 if __name__ == '__main__':
-    with open('usage.yml', 'rt') as f:
-        setting = yaml.load(f)
-
-    threads = [MoveIO(host=setting['host'], repository=setting['repository'], username=setting['username'], password=setting['password'],
-                      image=item['name'], tag=item['tag']) for item in setting['images']]
-    for t in threads:
-        t.start()
-
-    for t in threads:
-        t.join()
+    schedule.enter(1, 0, push_image)
+    schedule.enter(2, 0, clean_log)
+    schedule.run()

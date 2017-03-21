@@ -1,0 +1,4 @@
+Tue, 21 Mar 2017 16:50:52 download.py[line:40] INFO:busybox:latest is the latest***
+Tue, 21 Mar 2017 16:50:52 download.py[line:40] INFO:nginx:latest is the latest***
+Tue, 21 Mar 2017 16:50:52 download.py[line:75] INFO:log clean method going to sleep 1.0 minute
+Tue, 21 Mar 2017 16:50:52 download.py[line:106] INFO:log clean method going to sleep 609.1166666666667 minute

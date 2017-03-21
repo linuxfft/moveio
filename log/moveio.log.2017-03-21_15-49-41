@@ -1,0 +1,6 @@
+Tue, 21 Mar 2017 15:49:39 download.py[line:32] INFO:pull image: busybox:latest
+Tue, 21 Mar 2017 15:49:39 download.py[line:32] INFO:pull image: nginx:latest
+Tue, 21 Mar 2017 15:49:40 download.py[line:38] INFO:busybox:latest is the latest***
+Tue, 21 Mar 2017 15:49:41 download.py[line:38] INFO:nginx:latest is the latest***
+Tue, 21 Mar 2017 15:49:41 download.py[line:71] INFO:log clean method going to sleep 1.0 minute
+Tue, 21 Mar 2017 15:49:41 download.py[line:109] ERROR:[Errno 2] No such file or directory: 'moveio.log'
