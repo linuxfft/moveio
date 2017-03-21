@@ -1,8 +1,8 @@
 moveio:
   container_name: "moveio"
-  image: "moveio_1.0.1:latest"
+  image: "moveio:v1"
   volumes:
     - /data/moveio/
     - /var/run/docker.sock:/var/run/docker.sock
-    - /usr/src/config/usage.yml:/moveio/usage.yml:ro
-    - /usr/src/log:/moveio/log
+    - /data/moveio/usage.yml:/moveio/usage.yml
+    - /data/moveio/log:/moveio/log

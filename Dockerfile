@@ -14,4 +14,6 @@ RUN pip install -r /moveio/requirements.txt -i https://pypi.douban.com/simple
 
 CMD python /moveio/download.py
 
+COPY usage.yml usage.yml_bak
+
 WORKDIR /moveio/

@@ -1,7 +1,6 @@
 # -*- encoding: utf8 -*-
 import logging
 import logging.config
-import threading
 import docker
 import yaml
 from docker.errors import ImageNotFound
@@ -9,74 +8,83 @@ import time
 import datetime
 import os
 import sched
+import shutil
+from multiprocessing.dummy import Pool as ThreadPool
+
+# copy configure file
+file_name = 'usage.yml'
+if not os.path.getsize(file_name):
+    shutil.copy(file_name + "_bak", file_name)
 
 logging.config.fileConfig('logger.ini')
 schedule = sched.scheduler(time.time, time.sleep)
 
-threadList = []
+host = ''
+username = ''
+repository = ''
+password = ''
 
 
-class MoveIO(threading.Thread):
-    """Download image and push to remote repository"""
-    def __init__(self,  host, username, repository, password, image, tag='latest'):
-        threading.Thread.__init__(self)
-        self.host = host
-        self.username = username
-        self.password = password
-        self.image = image
-        self.tag = tag
-        self.repository = host+'/' + repository
-
-    def run(self):
+def push_image(image):
+    # print(image)
+    image_name = image['name']
+    tag = image['tag']
+    try:
+        client = docker.from_env()
+        # pull image
+        logging.info('pull image: ' + image_name + ':' + tag)
         try:
-            client = docker.from_env()
-            # pull image
-            logging.info('pull image: ' + self.image + ':' + self.tag)
-            try:
-                # if get method not found image, then throw ImageNotFound exception
-                locate_image = client.images.get(self.image + ':' + self.tag)
-                image = client.images.pull(self.image, tag=self.tag)
-                if image.id == locate_image.id:
-                    logging.info(self.image + ':' + self.tag + ' is the latest' + '***')
-                    return
-            except ImageNotFound:
-                image = client.images.pull(self.image, tag=self.tag)
+            # if get method not found image, then throw ImageNotFound exception
+            locate_image = client.images.get(image_name + ':' + tag)
+            image_obj = client.images.pull(image_name, tag=tag)
+            if image_obj.id == locate_image.id:
+                logging.info(image_name + ':' + tag + ' is the latest' + '***')
+                return
+        except ImageNotFound:
+            image_obj = client.images.pull(image_name, tag=tag)
 
-            # tag image
-            new_tag = self.image + '_' + self.tag
-            logging.info('tag image: ' + new_tag)
-            image.tag(self.repository, new_tag)
+        # tag image
+        new_tag = image_name + '_' + tag
+        logging.info('tag image: ' + new_tag)
+        image_obj.tag(repository, new_tag)
 
-            # push
-            logging.info('push image: ' + new_tag + ' ' + self.repository)
-            client.images.push(self.repository, tag=new_tag, auth_config={'username': self.username,
-                                                                                'password': self.password})
-            logging.info('push successed: ' + new_tag)
-        except Exception as e:
-            logging.error(e)
+        # push
+        logging.info('push image: ' + new_tag + ' ' + repository)
+        client.images.push(repository, tag=new_tag, auth_config={'username': username,
+                                                                      'password': password})
+        logging.info('push successed: ' + new_tag)
+    except Exception as e:
+        logging.error(e)
 
 
-def push_image():
+def run_push_image():
+    global host
+    global username
+    global password
+    global repository
+
     sleep_time = 60
 
     try:
         with open('usage.yml', 'rt') as f:
             setting = yaml.load(f)
 
-        threads = [MoveIO(host=setting['host'], repository=setting['repository'], username=setting['username'], password=setting['password'],
-                          image=item['name'], tag=item['tag']) for item in setting['images']]
+        host = setting['host']
+        repository = setting['repository']
+        username = setting['username']
+        password = setting['password']
+        repository = host + '/' + repository
 
-        for t in threads:
-            t.start()
+        # print(setting['images'])
+        pool = ThreadPool(100)
+        pool.map(push_image, setting['images'])
+        pool.close()
+        pool.join()
 
-        for t in threads:
-            t.join()
-
-        logging.info('log clean method going to sleep ' + str(sleep_time / 60) + ' minute')
-        schedule.enter(sleep_time, 0, push_image)
-
+        logging.info('push image method going to sleep ' + str(sleep_time / 60) + ' minute')
+        schedule.enter(sleep_time, 0, run_push_image)
     except Exception as e:
-        logging.error(e)
+        logging.log(e)
 
 
 def clean_log():
@@ -109,6 +117,7 @@ def clean_log():
         logging.error(e)
 
 if __name__ == '__main__':
-    schedule.enter(1, 0, push_image)
-    schedule.enter(2, 0, clean_log)
-    schedule.run()
+    pass
+    # schedule.enter(1, 0, run_push_image)
+    # schedule.enter(2, 0, clean_log)
+    # schedule.run()
