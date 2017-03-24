@@ -1,0 +1,7 @@
+images:
+ - name: redis
+   tag: latest
+ - name: golang
+   tag: latest
+ - name: centos
+   tag: latest
