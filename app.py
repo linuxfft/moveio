@@ -1,4 +1,3 @@
-import logging.config
 import yaml
 import os
 import shutil
@@ -7,11 +6,12 @@ from redis.connection import ConnectionPool
 from huey import RedisHuey
 
 
-logging.config.fileConfig('logger.ini')
-logger = logging.getLogger()
-
 # copy setting file
-setting_file_name = 'usage.yml'
+images_file_name = 'image_list.yml'
+if not os.path.getsize(images_file_name):
+    shutil.copy(images_file_name + "_bak", images_file_name)
+
+setting_file_name = 'settings.yml'
 if not os.path.getsize(setting_file_name):
     shutil.copy(setting_file_name + "_bak", setting_file_name)
 

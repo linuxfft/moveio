@@ -5,14 +5,15 @@ from tasks import create_sync_blue_print, sync_image
 
 import logging.config
 logging.config.fileConfig('logger.ini')
-
 LOG = logging.getLogger('logger01')
 
 
-@docker_huey.periodic_task(crontab(minute='*'))
-def sync_all_library_images():
-    with open('image_list.yml', 'rt') as f:
-        image_list = yaml.load(f)
+with open('image_list.yml', 'rt') as f:
+    image_list = yaml.load(f)
+
+
+@docker_huey.periodic_task(crontab(hour='*/24'))
+def sync_all_images():
     for image_name in image_list['images']:
         try:
             blue_print = create_sync_blue_print(image_name)
@@ -21,4 +22,4 @@ def sync_all_library_images():
             LOG.error(e)
 
 if __name__ == '__main__':
-    sync_all_library_images()
+    sync_all_images()

@@ -1,2 +1,4 @@
+redis
+huey
 PyYAML
 docker

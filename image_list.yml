@@ -5,3 +5,9 @@ images:
    tag: latest
  - name: centos
    tag: latest
+ - name: postgres
+   tag: latest
+ - name: nginx
+   tag: latest
+ - name: mongo
+   tag: latest

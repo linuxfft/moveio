@@ -1,4 +1,3 @@
-import logging
 import docker
 from app import docker_huey
 from app import settings
@@ -9,7 +8,7 @@ logging.config.fileConfig('logger.ini')
 
 RUN = 'running'
 LOG = logging.getLogger('logger01')
-client = docker.from_env()
+client = docker.from_env(version='1.24')
 
 
 @docker_huey.task(retries=3, retry_delay=180)

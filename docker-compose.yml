@@ -1,8 +1,9 @@
 moveio:
   container_name: "moveio"
-  image: "moveio:v1"
+  image: "registry.cloudahead.info/fengzhitao/moveio:moveio_1.0.1"
   volumes:
     - /data/moveio/
     - /var/run/docker.sock:/var/run/docker.sock
+    - /data/moveio/settings.yml:/moveio/settings.yml
     - /data/moveio/image_list.yml:/moveio/image_list.yml
     - /data/moveio/log:/moveio/log
