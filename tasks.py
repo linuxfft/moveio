@@ -35,7 +35,7 @@ class BluePrint(object):
             image_obj = client.images.pull(self.src_image['name'], tag=self.src_image['tag'])
 
         # tag image
-        new_tag = '{}_{}'.format(self.src_image['name'], self.src_image['tag'])
+        new_tag = '{}_{}'.format(self.src_image['name'].replace('/', '_'), self.src_image['tag'])
         LOG.info('tag image: ' + new_tag)
         image_obj.tag(settings['REPOSITORY'], new_tag)
 

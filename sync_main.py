@@ -21,5 +21,5 @@ def sync_all_images():
         except Exception as e:
             LOG.error(e)
 
-if __name__ == '__main__':
-    sync_all_images()
+sync_all_images()
+

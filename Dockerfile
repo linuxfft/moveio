@@ -8,15 +8,15 @@ FROM python:3.5-alpine
 
 MAINTAINER fengzhitao@empower.cn
 
-ADD ./requirements.txt /
-RUN pip install -r /requirements.txt -i https://pypi.douban.com/simple
-
 ADD . /moveio/
 
 WORKDIR /moveio/
 
-ENTRYPOINT ["/bin/sh", "consumer.sh"]
+#ADD ./requirements.txt /
+RUN pip install -r requirements.txt -i https://pypi.douban.com/simple
 
+COPY settings.yml settings.yml_bak
 COPY image_list.yml image_list.yml_bak
 
+ENTRYPOINT ["/bin/sh", "consumer.sh"]
 
