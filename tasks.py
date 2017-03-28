@@ -1,7 +1,6 @@
 import docker
 from app import docker_huey
 from app import settings
-from docker.errors import ImageNotFound
 import logging.config
 
 logging.config.fileConfig('logger.ini')
@@ -24,15 +23,7 @@ class BluePrint(object):
         self.src_image = src_image
 
     def start(self):
-        try:
-            # if get method not found image, then throw ImageNotFound exception
-            locate_image = client.images.get('{}:{}'.format(self.src_image['name'], self.src_image['tag']))
-            image_obj = client.images.pull(self.src_image['name'], tag=self.src_image['tag'])
-            if image_obj.id == locate_image.id:
-                LOG.info('{}:{}'.format(self.src_image['name'], self.src_image['tag']) + ' is the latest' + '***')
-                return
-        except ImageNotFound:
-            image_obj = client.images.pull(self.src_image['name'], tag=self.src_image['tag'])
+        image_obj = client.images.pull(self.src_image['name']+':'+self.src_image['tag'])
 
         # tag image
         new_tag = '{}_{}'.format(self.src_image['name'].replace('/', '_'), self.src_image['tag'])
