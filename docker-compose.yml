@@ -7,3 +7,13 @@ moveio:
     - /data/moveio/image_list.yml:/moveio/image_list.yml
     - /data/moveio/log:/moveio/log
     - /etc/localtime:/etc/localtime
+  links:
+    - redis
+redis:
+    container_name: "redis"
+    image: "redis"
+    ports:
+        - "6379:6379"
+    volumes:
+        - /data/redis:/data
+    restart: "always"
